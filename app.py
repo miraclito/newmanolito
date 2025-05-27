@@ -91,6 +91,10 @@ if st.button("Resolver"):
                     else:
                         Z = np.minimum(Z, b_ub[i] - a1 * X)  # Si la restricción es solo en X
 
+                # Asegurarse de que los niveles estén ordenados de forma creciente
+                Z_min, Z_max = np.min(Z), np.max(Z)
+                levels = np.linspace(Z_min, Z_max, 10)  # Definir niveles crecientes
+
                 # Graficar las restricciones
                 for i in range(len(A_ub)):
                     a1, a2 = A_ub[i]
@@ -101,8 +105,8 @@ if st.button("Resolver"):
                         x_line = b_ub[i] / a1 if a1 != 0 else 0
                         ax.axvline(x=x_line, label=f'Restricción {i+1}')
                 
-                # Sombrear la región factible
-                ax.contourf(X, Y, Z, levels=[0, np.max(Z)], colors='gray', alpha=0.3)
+                # Sombrear la región factible con contornos crecientes
+                ax.contourf(X, Y, Z, levels=levels, cmap='Greys', alpha=0.3)
 
                 # Mostrar el punto óptimo
                 ax.plot(resultado.x[0], resultado.x[1], 'ro', label='Punto óptimo')
