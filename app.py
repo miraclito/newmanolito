@@ -75,9 +75,23 @@ if st.button("Resolver"):
             if num_vars == 2 and A_ub is not None:
                 st.write("### 📊 Gráfica de la solución (2 variables)")
                 fig, ax = plt.subplots()
-                x_vals = np.linspace(0, 20, 400)
+                x_vals = np.linspace(0, 20, 400)  # Definir el rango de valores de x
                 
-                # Dibujo de las restricciones
+                # Crear la malla para las restricciones
+                y_vals = np.linspace(0, 20, 400)  # Definir el rango de valores de y
+                X, Y = np.meshgrid(x_vals, y_vals)  # Crear la malla de X y Y
+                
+                # Sombrear la región factible
+                Z = np.zeros_like(X)
+
+                for i in range(len(A_ub)):
+                    a1, a2 = A_ub[i]
+                    if a2 != 0:
+                        Z = np.minimum(Z, (b_ub[i] - a1 * X) / a2)  # Calcular la intersección
+                    else:
+                        Z = np.minimum(Z, b_ub[i] - a1 * X)  # Si la restricción es solo en X
+
+                # Graficar las restricciones
                 for i in range(len(A_ub)):
                     a1, a2 = A_ub[i]
                     if a2 != 0:
@@ -88,18 +102,9 @@ if st.button("Resolver"):
                         ax.axvline(x=x_line, label=f'Restricción {i+1}')
                 
                 # Sombrear la región factible
-                y_min = np.min(b_ub)  # Para encontrar el límite inferior en el gráfico
-                y_max = np.max(b_ub)  # Para el límite superior
+                ax.contourf(X, Y, Z, levels=[0, np.max(Z)], colors='gray', alpha=0.3)
 
-                # Crear malla para sombrear la región factible
-                X, Y = np.meshgrid(x_vals, np.linspace(y_min, y_max, 400))
-                Z = np.zeros_like(X)
-                for i in range(len(A_ub)):
-                    a1, a2 = A_ub[i]
-                    Z = np.minimum(Z, (b_ub[i] - a1 * X) / a2)  # Calcular intersección
-                
-                ax.fill_between(X[0], Y[0], Z[0], where=(Z>0), color="gray", alpha=0.5)
-                
+                # Mostrar el punto óptimo
                 ax.plot(resultado.x[0], resultado.x[1], 'ro', label='Punto óptimo')
                 ax.annotate(f'({resultado.x[0]:.2f}, {resultado.x[1]:.2f})',
                             (resultado.x[0], resultado.x[1]),
