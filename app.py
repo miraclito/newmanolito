@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import linprog
 import matplotlib.pyplot as plt
 
-st.title("Programación Lineal de Hiram- Maximizar/Minimizar")
+st.title("Programación Lineal de Hiram - Maximizar/Minimizar")
 
 modo = st.radio("Objetivo:", ("Minimizar", "Maximizar"))
 num_vars = st.number_input("Número de variables", min_value=2, max_value=10, value=2, step=1)
@@ -75,40 +75,30 @@ if st.button("Resolver"):
             if num_vars == 2 and A_ub is not None:
                 st.write("### 📊 Gráfica de la solución (2 variables)")
                 fig, ax = plt.subplots()
-                x_vals = np.linspace(0, 20, 400)  # Definir el rango de valores de x
-                
-                # Crear la malla para las restricciones
-                y_vals = np.linspace(0, 20, 400)  # Definir el rango de valores de y
-                X, Y = np.meshgrid(x_vals, y_vals)  # Crear la malla de X y Y
-                
-                # Sombrear la región factible
-                Z = np.zeros_like(X)
+                x_vals = np.linspace(0, 20, 400)
+                y_vals = np.linspace(0, 20, 400)
+                X, Y = np.meshgrid(x_vals, y_vals)
+
+                # Inicializar una máscara booleana donde todas las condiciones son True
+                region_factible = np.ones_like(X, dtype=bool)
 
                 for i in range(len(A_ub)):
                     a1, a2 = A_ub[i]
-                    if a2 != 0:
-                        Z = np.minimum(Z, (b_ub[i] - a1 * X) / a2)  # Calcular la intersección
-                    else:
-                        Z = np.minimum(Z, b_ub[i] - a1 * X)  # Si la restricción es solo en X
+                    restric = a1 * X + a2 * Y <= b_ub[i]
+                    region_factible &= restric  # Intersección de todas las restricciones
 
-                # Asegurarse de que los niveles estén ordenados de forma creciente
-                Z_min, Z_max = np.min(Z), np.max(Z)
-                levels = np.linspace(Z_min, Z_max, 10)  # Definir niveles crecientes
-
-                # Graficar las restricciones
-                for i in range(len(A_ub)):
-                    a1, a2 = A_ub[i]
+                    # Graficar la recta de la restricción
                     if a2 != 0:
-                        y_vals = (b_ub[i] - a1 * x_vals) / a2
-                        ax.plot(x_vals, y_vals, label=f'Restricción {i+1}')
+                        y_r = (b_ub[i] - a1 * x_vals) / a2
+                        ax.plot(x_vals, y_r, label=f"Restricción {i+1}")
                     else:
                         x_line = b_ub[i] / a1 if a1 != 0 else 0
-                        ax.axvline(x=x_line, label=f'Restricción {i+1}')
-                
-                # Sombrear la región factible con contornos crecientes
-                ax.contourf(X, Y, Z, levels=levels, cmap='Greys', alpha=0.3)
+                        ax.axvline(x=x_line, label=f"Restricción {i+1}")
 
-                # Mostrar el punto óptimo
+                # Pintar la región factible
+                ax.contourf(X, Y, region_factible, levels=[0.5, 1], colors=["#a0d2eb"], alpha=0.5)
+
+                # Punto óptimo
                 ax.plot(resultado.x[0], resultado.x[1], 'ro', label='Punto óptimo')
                 ax.annotate(f'({resultado.x[0]:.2f}, {resultado.x[1]:.2f})',
                             (resultado.x[0], resultado.x[1]),
