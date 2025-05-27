@@ -72,46 +72,49 @@ if st.button("Resolver"):
                 st.write(f"x{i+1} = {val:.4f}")
                 
             # Mostrar gráfica si hay 2 variables
-            if num_vars == 2 and A_ub is not None:
-                st.write("### 📊 Gráfica de la solución (2 variables)")
-                fig, ax = plt.subplots()
-                x_vals = np.linspace(0, 20, 400)
-                y_vals = np.linspace(0, 20, 400)
-                X, Y = np.meshgrid(x_vals, y_vals)
+            # Mostrar gráfica si hay 2 variables
+        if num_vars == 2 and A_ub is not None:
+            st.write("### 📊 Gráfica de la solución (2 variables)")
 
-                # Inicializar una máscara booleana donde todas las condiciones son True
-                region_factible = np.ones_like(X, dtype=bool)
+            # Rango dinámico grande para que se vea toda la región factible
+            rango_x = np.linspace(0, 100, 1000)
+            rango_y = np.linspace(0, 100, 1000)
+            X, Y = np.meshgrid(rango_x, rango_y)
 
-                for i in range(len(A_ub)):
-                    a1, a2 = A_ub[i]
-                    restric = a1 * X + a2 * Y <= b_ub[i]
-                    region_factible &= restric  # Intersección de todas las restricciones
+            region_factible = np.ones_like(X, dtype=bool)
 
-                    # Graficar la recta de la restricción
-                    if a2 != 0:
-                        y_r = (b_ub[i] - a1 * x_vals) / a2
-                        ax.plot(x_vals, y_r, label=f"Restricción {i+1}")
-                    else:
-                        x_line = b_ub[i] / a1 if a1 != 0 else 0
-                        ax.axvline(x=x_line, label=f"Restricción {i+1}")
+            fig, ax = plt.subplots(figsize=(10, 8))  # Tamaño más grande del gráfico
 
-                # Pintar la región factible
-                ax.contourf(X, Y, region_factible, levels=[0.5, 1], colors=["#a0d2eb"], alpha=0.5)
+            for i in range(len(A_ub)):
+                a1, a2 = A_ub[i]
+                restric = a1 * X + a2 * Y <= b_ub[i]
+                region_factible &= restric
 
-                # Punto óptimo
-                ax.plot(resultado.x[0], resultado.x[1], 'ro', label='Punto óptimo')
-                ax.annotate(f'({resultado.x[0]:.2f}, {resultado.x[1]:.2f})',
-                            (resultado.x[0], resultado.x[1]),
-                            textcoords="offset points", xytext=(10,10),
-                            ha='center', color='green')
+                if a2 != 0:
+                    y_r = (b_ub[i] - a1 * rango_x) / a2
+                    ax.plot(rango_x, y_r, label=f"Restricción {i+1}")
+                else:
+                    x_line = b_ub[i] / a1 if a1 != 0 else 0
+                    ax.axvline(x=x_line, label=f"Restricción {i+1}")
 
-                ax.set_xlim(0, max(10, resultado.x[0] + 2))
-                ax.set_ylim(0, max(10, resultado.x[1] + 2))
-                ax.set_xlabel("x₁")
-                ax.set_ylabel("x₂")
-                ax.grid(True)
-                ax.legend()
-                st.pyplot(fig)
+            ax.contourf(X, Y, region_factible, levels=[0.5, 1], colors=["#a0d2eb"], alpha=0.5)
+
+            # Punto óptimo
+            ax.plot(resultado.x[0], resultado.x[1], 'ro', label='Punto óptimo')
+            ax.annotate(f'({resultado.x[0]:.2f}, {resultado.x[1]:.2f})',
+                        (resultado.x[0], resultado.x[1]),
+                        textcoords="offset points", xytext=(10,10),
+                        ha='center', color='green')
+
+            # Extensión automática basada en el punto óptimo
+            ax.set_xlim(0, max(20, resultado.x[0] + 10))
+            ax.set_ylim(0, max(20, resultado.x[1] + 10))
+            ax.set_xlabel("x₁")
+            ax.set_ylabel("x₂")
+            ax.grid(True)
+            ax.legend()
+            st.pyplot(fig)
+
 
         else:
             st.error("No se encontró solución óptima.")
